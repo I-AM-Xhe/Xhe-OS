@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XHE Kernel | Addressing Rails Console</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="kernel-header">
+      <div class="logo">
+        <span class="logo-glyph">◈</span>
+        <span class="logo-text">XHE</span>
+        <span class="logo-sub">Kernel</span>
+      </div>
+      <nav class="tab-nav" data-testid="tab-nav">
+        <button class="tab-btn active" data-tab="addressing" data-testid="tab-addressing">Addressing</button>
+        <button class="tab-btn" data-tab="feed" data-testid="tab-feed">Feed</button>
+        <button class="tab-btn" data-tab="channels" data-testid="tab-channels">Channels</button>
+        <button class="tab-btn" data-tab="slips" data-testid="tab-slips">Slips</button>
+      </nav>
+      <div class="header-status">
+        <span class="status-dot" data-testid="kernel-status-dot"></span>
+        <span data-testid="kernel-status-text">Kernel Active</span>
+      </div>
+    </header>
+
+    <!-- Tab: Addressing -->
+    <div id="addressing-panel" class="tab-panel active">
+      <main class="main-grid">
+        <!-- Left Panel: Address Generator -->
+        <section class="panel generator-panel" data-testid="generator-panel">
+          <h2 class="panel-title">Address Generator</h2>
+          <p class="panel-desc">Derive addresses from meaning, not location.</p>
+          
+          <div class="form-group">
+            <label for="content-input">Content</label>
+            <textarea 
+              id="content-input" 
+              data-testid="content-input"
+              placeholder="Enter content to hash..."
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="namespace-select">Namespace</label>
+            <select id="namespace-select" data-testid="namespace-select">
+              <option value="xhe">xhe:// — Content Address</option>
+              <option value="did:xhe">did:xhe: — Identity Address</option>
+              <option value="pulse">pulse:// — Event Address</option>
+              <option value="ipfs">ipfs:// — Storage Address</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="pulse-options" style="display: none;">
+            <label for="pulse-sequence">Pulse Sequence (optional)</label>
+            <input 
+              type="text" 
+              id="pulse-sequence" 
+              data-testid="pulse-sequence"
+              placeholder="Auto-generated if empty"
+            >
+          </div>
+
+          <button id="generate-btn" class="btn btn-primary" data-testid="generate-address-btn">
+            Generate Address
+          </button>
+
+          <div class="generated-result" id="generated-result" data-testid="generated-result">
+            <div class="result-header">
+              <span class="result-label">Generated Address</span>
+              <button class="btn-copy" id="copy-address-btn" data-testid="copy-address-btn" title="Copy">⎘</button>
+            </div>
+            <code class="result-address" id="result-address" data-testid="result-address">—</code>
+          </div>
+        </section>
+
+        <!-- Center Panel: Resolution -->
+        <section class="panel resolver-panel" data-testid="resolver-panel">
+          <h2 class="panel-title">Address Resolution</h2>
+          <p class="panel-desc">Resolution is computation, not networking.</p>
+
+          <div class="form-group">
+            <label for="resolve-input">Address to Resolve</label>
+            <input 
+              type="text" 
+              id="resolve-input" 
+              data-testid="resolve-input"
+              placeholder="xhe://, did:xhe:, pulse://, slip://, feed://, channel://"
+            >
+          </div>
+
+          <button id="resolve-btn" class="btn btn-secondary" data-testid="resolve-address-btn">
+            Resolve Address
+          </button>
+
+          <div class="resolution-result" id="resolution-result" data-testid="resolution-result">
+            <div class="result-meta">
+              <span class="meta-label">Type:</span>
+              <span id="resolved-type" data-testid="resolved-type">—</span>
+            </div>
+            <div class="result-meta">
+              <span class="meta-label">State:</span>
+              <span id="resolved-status" data-testid="resolved-status">—</span>
+            </div>
+            <div class="result-content">
+              <span class="meta-label">Content:</span>
+              <pre id="resolved-content" data-testid="resolved-content">—</pre>
+            </div>
+          </div>
+
+          <div class="uri-reference" data-testid="uri-reference">
+            <h3>URI Schemes</h3>
+            <ul class="scheme-list">
+              <li><code>xhe://</code><span>Content (sha256)</span></li>
+              <li><code>did:xhe:</code><span>Identity (sovereign)</span></li>
+              <li><code>pulse://</code><span>Event (immutable)</span></li>
+              <li><code>slip://</code><span>Economic transaction</span></li>
+              <li><code>feed://</code><span>Pulse index view</span></li>
+              <li><code>channel://</code><span>Scoped namespace</span></li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Right Panel: Address Index -->
+        <section class="panel book-panel" data-testid="address-book-panel">
+          <h2 class="panel-title">Address Index</h2>
+          <p class="panel-desc">Non-authoritative view. Kernel is truth.</p>
+          
+          <div class="book-filters">
+            <button class="filter-btn active" data-filter="all" data-testid="filter-all">All</button>
+            <button class="filter-btn" data-filter="xhe" data-testid="filter-xhe">xhe://</button>
+            <button class="filter-btn" data-filter="did:xhe" data-testid="filter-did">did:</button>
+            <button class="filter-btn" data-filter="pulse" data-testid="filter-pulse">pulse://</button>
+          </div>
+
+          <div class="book-entries" id="book-entries" data-testid="book-entries">
+            <div class="empty-state" data-testid="empty-state">
+              <span>No addresses in index.</span>
+              <span class="hint">Generate addresses to populate.</span>
+            </div>
+          </div>
+
+          <div class="book-actions">
+            <button id="export-book-btn" class="btn btn-tertiary" data-testid="export-book-btn">Export</button>
+            <button id="import-book-btn" class="btn btn-tertiary" data-testid="import-book-btn">Import</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
+            <button id="clear-book-btn" class="btn btn-danger" data-testid="clear-book-btn">Clear Index</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Tab: Feed (Social) -->
+    <div id="feed-panel" class="tab-panel">
+      <main class="social-grid">
+        <section class="panel feed-panel" data-testid="feed-panel">
+          <h2 class="panel-title">Global Feed</h2>
+          <p class="panel-desc">Pulses as posts. Feeds are indexed views.</p>
+          
+          <div class="post-composer">
+            <textarea 
+              id="post-input" 
+              data-testid="post-input"
+              placeholder="What's happening? (Ctrl+Enter to post)"
+              rows="3"
+            ></textarea>
+            <button id="post-btn" class="btn btn-primary" data-testid="post-btn">Post</button>
+          </div>
+
+          <div class="feed-entries" id="feed-entries" data-testid="feed-entries">
+            <div class="empty-state">
+              <span>No posts yet.</span>
+              <span class="hint">Create your first post.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel following-panel" data-testid="following-panel">
+          <h2 class="panel-title">Social Graph</h2>
+          <p class="panel-desc">Connections are acts, not defaults.</p>
+          
+          <div class="social-stats">
+            <div class="stat-item">
+              <span class="stat-value" id="following-count">0</span>
+              <span class="stat-label">Following</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="followers-count">0</span>
+              <span class="stat-label">Followers</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Follow DID</label>
+            <input type="text" id="follow-input" placeholder="did:xhe:..." data-testid="follow-input">
+            <button id="follow-btn" class="btn btn-secondary" data-testid="follow-btn">Follow</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Tab: Channels -->
+    <div id="channels-panel" class="tab-panel">
+      <main class="channels-grid">
+        <section class="panel channel-list-panel" data-testid="channel-list-panel">
+          <h2 class="panel-title">Channels</h2>
+          <p class="panel-desc">Named pulse indexes. Scoped by identity.</p>
+          
+          <div class="form-group inline-form">
+            <input type="text" id="channel-name-input" placeholder="Channel name" data-testid="channel-name-input">
+            <button id="create-channel-btn" class="btn btn-primary" data-testid="create-channel-btn">Create</button>
+          </div>
+          
+          <div class="channel-list" id="channel-list" data-testid="channel-list">
+            <div class="empty-state"><span>No channels.</span></div>
+          </div>
+        </section>
+
+        <section class="panel channel-view-panel" data-testid="channel-view-panel">
+          <h2 class="panel-title" id="channel-header"># Select a Channel</h2>
+          <div class="channel-posts" id="channel-posts" data-testid="channel-posts">
+            <div class="empty-state"><span>Select a channel to view posts.</span></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Tab: Slips (Economic) -->
+    <div id="slips-panel" class="tab-panel">
+      <main class="slips-grid">
+        <section class="panel slip-balance-panel" data-testid="slip-balance-panel">
+          <h2 class="panel-title">Slip Ledger</h2>
+          <p class="panel-desc">Economic layer. Slips as value units.</p>
+          
+          <div class="balance-display" data-testid="balance-display">
+            <span class="balance-label">Balance</span>
+            <span class="balance-value" id="slip-balance-main">100</span>
+            <span class="balance-unit">slips</span>
+          </div>
+
+          <div class="slip-actions">
+            <div class="form-group">
+              <label>Mint Slips</label>
+              <div class="inline-form">
+                <input type="number" id="mint-amount" placeholder="Amount" min="1" data-testid="mint-amount">
+                <button id="mint-btn" class="btn btn-secondary" data-testid="mint-btn">Mint</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Transfer Slips</label>
+              <input type="text" id="transfer-to" placeholder="did:xhe:..." data-testid="transfer-to">
+              <div class="inline-form">
+                <input type="number" id="transfer-amount" placeholder="Amount" min="1" data-testid="transfer-amount">
+                <button id="transfer-btn" class="btn btn-primary" data-testid="transfer-btn">Transfer</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel slip-history-panel" data-testid="slip-history-panel">
+          <h2 class="panel-title">Transaction History</h2>
+          <p class="panel-desc">Each transaction is a pulse. Auditable.</p>
+          
+          <div class="slip-history" id="slip-history" data-testid="slip-history">
+            <div class="empty-state"><span>No transactions.</span></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Bottom Panel: Routing Rules & Console -->
+    <div class="bottom-grid">
+      <section class="panel routing-panel" data-testid="routing-panel">
+        <h2 class="panel-title">Routing Rules</h2>
+        <div class="routing-rules">
+          <div class="rule-item">
+            <span class="rule-from">Location</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to none">None</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-from">DNS</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to none">None</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-from">Servers</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to none">None</span>
+          </div>
+          <div class="rule-divider"></div>
+          <div class="rule-item active">
+            <span class="rule-from">Content</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to">xhe://</span>
+          </div>
+          <div class="rule-item active">
+            <span class="rule-from">Identity</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to">did:xhe:</span>
+          </div>
+          <div class="rule-item active">
+            <span class="rule-from">Events</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to">pulse://</span>
+          </div>
+          <div class="rule-item active">
+            <span class="rule-from">Value</span>
+            <span class="rule-arrow">→</span>
+            <span class="rule-to">slip://</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel console-panel" data-testid="console-panel">
+        <div class="console-header">
+          <h2 class="panel-title">Console</h2>
+          <span class="console-hint">Kernel events only. Console = witness.</span>
+          <button id="clear-console-btn" class="btn-icon" data-testid="clear-console-btn" title="Clear">⌫</button>
+        </div>
+        <div class="console-output" id="console-output" data-testid="console-output"></div>
+      </section>
+    </div>
+
+    <!-- Identity Panel (Floating) -->
+    <aside class="identity-panel" id="identity-panel" data-testid="identity-panel">
+      <div class="identity-header">
+        <span class="identity-glyph">◇</span>
+        <h3>Identity Kernel</h3>
+        <button id="toggle-identity-btn" class="btn-icon" data-testid="toggle-identity-btn">−</button>
+      </div>
+      <div class="identity-content" id="identity-content">
+        <div class="identity-field">
+          <label>Your DID</label>
+          <code id="current-did" data-testid="current-did">did:xhe:—</code>
+        </div>
+        <div class="identity-stats">
+          <div class="id-stat">
+            <span class="stat-value" id="pulse-count">0</span>
+            <span class="stat-label">Pulses</span>
+          </div>
+          <div class="id-stat">
+            <span class="stat-value" id="address-count">0</span>
+            <span class="stat-label">Addresses</span>
+          </div>
+          <div class="id-stat">
+            <span class="stat-value" id="slip-balance">100</span>
+            <span class="stat-label">Slips</span>
+          </div>
+        </div>
+        <button id="new-identity-btn" class="btn btn-tertiary" data-testid="new-identity-btn">
+          Regenerate Identity
+        </button>
+        <p class="identity-note">History preserved for audit.</p>
+      </div>
+    </aside>
+
+    <!-- Toast Container -->
+    <div id="toast-container" data-testid="toast-container"></div>
+  </div>
+
+  <script type="module" src="kernel.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
